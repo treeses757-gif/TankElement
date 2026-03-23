@@ -1,4 +1,3 @@
-// Firebase configuration and initialization (compat version)
 const firebaseConfig = {
   apiKey: "AIzaSyC-iLxizH1umfeHSUZHLvpAt6XNm21p90Y",
   authDomain: "tanksduel-b90c7.firebaseapp.com",
@@ -10,9 +9,6 @@ const firebaseConfig = {
   measurementId: "G-L2XVXMBQ1Y"
 };
 
-// Initialize Firebase (global firebase object is available)
 firebase.initializeApp(firebaseConfig);
 const firebaseDatabase = firebase.database();
-
-// Export as global variable for easy access
 window.db = firebaseDatabase;
