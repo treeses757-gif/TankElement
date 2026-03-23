@@ -311,4 +311,10 @@ input, select {
   .health-bar {
     width: 150px;
   }
+  /* Add at the end: */
+@media (hover: hover) and (pointer: fine) {
+    .touch-controls {
+        display: none;
+    }
+}
 }
