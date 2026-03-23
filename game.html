@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tanks Duel - Игра</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="game-ui">
+        <div class="health-bar">
+            <div class="health-fill" id="healthFill"></div>
+        </div>
+        <div class="ability-icon" id="abilityIcon">
+            <span>✨</span>
+            <div class="cooldown-overlay" id="abilityCooldownOverlay" style="height:0%"></div>
+        </div>
+        <div class="leaderboard" id="leaderboard">
+            <h3>🏆 Лидеры</h3>
+            <ol id="leaderboardList"></ol>
+        </div>
+        <button id="exitGameBtn" class="btn exit-btn">🚪 Выйти</button>
+    </div>
+    
+    <div class="touch-controls" id="touchControls">
+        <button class="touch-btn" data-action="forward">⬆️</button>
+        <button class="touch-btn" data-action="back">⬇️</button>
+        <button class="touch-btn" data-action="left">⬅️</button>
+        <button class="touch-btn" data-action="right">➡️</button>
+        <button class="touch-btn" data-action="turretLeft">↩️</button>
+        <button class="touch-btn" data-action="turretRight">↪️</button>
+        <button class="touch-btn" data-action="shoot">💥</button>
+        <button class="touch-btn" data-action="ability">✨</button>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="tankStyles.js"></script>
+    <script src="powerups.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

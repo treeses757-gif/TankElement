@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tanks Duel - Многопользовательская игра</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="game-title">⚡ TANKS DUEL ⚡</h1>
+        <div class="main-panels">
+            <!-- Левая панель: создание комнаты -->
+            <div class="panel create-panel">
+                <h2>Создать битву</h2>
+                <div class="form-group">
+                    <label>Режим:</label>
+                    <select id="createMode">
+                        <option value="duel">Дуэль (2 игрока)</option>
+                        <option value="battle">Королевская битва (до 10)</option>
+                    </select>
+                </div>
+                <button id="createRoomBtn" class="btn primary">➕ Создать комнату</button>
+                <div id="roomCodeDisplay" class="room-code" style="display:none;">
+                    Код комнаты: <strong id="roomCodeValue"></strong>
+                    <button id="copyCodeBtn" class="btn small">📋 Копировать</button>
+                </div>
+            </div>
+
+            <!-- Правая панель: присоединение -->
+            <div class="panel join-panel">
+                <h2>Присоединиться</h2>
+                <div class="form-group">
+                    <input type="text" id="joinRoomCode" placeholder="Введите код комнаты (4-6 цифр)" maxlength="6">
+                    <button id="joinRoomBtn" class="btn primary">🚀 Войти</button>
+                </div>
+                <h3>Активные комнаты</h3>
+                <div id="roomsList" class="rooms-list"></div>
+            </div>
+        </div>
+
+        <!-- Выбор персонажа (сетка 4x5) -->
+        <div class="character-section">
+            <h2>Выбери свой танк <span id="randomCharBtn" class="random-btn">🎲 Случайный</span></h2>
+            <div id="charactersGrid" class="characters-grid"></div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="tankStyles.js"></script>
+    <script>
+        // Главная логика index.html
+        let selectedCharacterId = 1;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Инициализация Firebase уже в firebase-config.js
+        window.db = firebaseDatabase;
+        
+        // Загружаем персонажей
+        function renderCharacters() {
+            const grid = document.getElementById('charactersGrid');
+            grid.innerHTML = '';
+            tankStyles.forEach(tank => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                if (selectedCharacterId === tank.id) card.classList.add('selected');
+                card.innerHTML = `
+                    <div class="char-preview" style="background: ${tank.colorHull}; border-color: ${tank.colorTurret};">${tank.icon || '🚀'}</div>
+                    <div class="char-name">${tank.name}</div>
+                    <div class="char-ability">✨ ${tank.abilityName}</div>
+                `;
+                card.addEventListener('click', () => {
+                    selectedCharacterId = tank.id;
+                    document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    localStorage.setItem('selectedTank', tank.id);
+                });
+                grid.appendChild(card);
+            });
+        }
+        
+        // Случайный выбор
+        document.getElementById('randomCharBtn').addEventListener('click', () => {
+            const randomId = Math.floor(Math.random() * tankStyles.length) + 1;
+            selectedCharacterId = randomId;
+            renderCharacters(); // перерисовка с выделением
+            localStorage.setItem('selectedTank', randomId);
+        });
+        
+        // Загрузка сохраненного танка
+        const saved = localStorage.getItem('selectedTank');
+        if (saved) selectedCharacterId = parseInt(saved);
+        renderCharacters();
+        
+        // Создание комнаты
+        document.getElementById('createRoomBtn').addEventListener('click', async () => {
+            const mode = document.getElementById('createMode').value;
+            const maxPlayers = mode === 'duel' ? 2 : 10;
+            const roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            const roomRef = db.ref(`rooms/${roomId}`);
+            await roomRef.set({
+                info: {
+                    mode: mode,
+                    status: 'waiting',
+                    maxPlayers: maxPlayers,
+                    currentPlayers: 0,
+                    createdAt: Date.now()
+                }
+            });
+            document.getElementById('roomCodeValue').innerText = roomId;
+            document.getElementById('roomCodeDisplay').style.display = 'flex';
+            // Автоматически присоединяемся
+            joinRoom(roomId, mode);
+        });
+        
+        document.getElementById('copyCodeBtn').addEventListener('click', () => {
+            const code = document.getElementById('roomCodeValue').innerText;
+            navigator.clipboard.writeText(code);
+            alert('Код скопирован!');
+        });
+        
+        // Присоединение по коду
+        document.getElementById('joinRoomBtn').addEventListener('click', () => {
+            const code = document.getElementById('joinRoomCode').value.trim();
+            if (!code) return;
+            const roomRef = db.ref(`rooms/${code}/info`);
+            roomRef.get().then(snapshot => {
+                if (snapshot.exists() && snapshot.val().status === 'waiting') {
+                    joinRoom(code, snapshot.val().mode);
+                } else {
+                    alert('Комната не найдена или уже в игре');
+                }
+            });
+        });
+        
+        function joinRoom(roomId, mode) {
+            const playerId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('playerId', playerId);
+            localStorage.setItem('roomId', roomId);
+            localStorage.setItem('gameMode', mode);
+            localStorage.setItem('selectedTank', selectedCharacterId);
+            window.location.href = `game.html?roomId=${roomId}&mode=${mode}&playerId=${playerId}&tankId=${selectedCharacterId}`;
+        }
+        
+        // Отображение активных комнат
+        function loadRooms() {
+            const roomsRef = db.ref('rooms');
+            roomsRef.on('value', (snapshot) => {
+                const container = document.getElementById('roomsList');
+                container.innerHTML = '';
+                const rooms = snapshot.val();
+                if (!rooms) return;
+                Object.entries(rooms).forEach(([id, data]) => {
+                    const info = data.info;
+                    if (info && info.status === 'waiting') {
+                        const roomDiv = document.createElement('div');
+                        roomDiv.className = 'room-item';
+                        roomDiv.innerHTML = `
+                            <span>🏠 ${id}</span>
+                            <span>${info.mode === 'duel' ? '⚔️ Дуэль' : '👑 Битва'}</span>
+                            <span>${info.currentPlayers}/${info.maxPlayers}</span>
+                            <button class="btn small join-room-btn" data-id="${id}">Войти</button>
+                        `;
+                        container.appendChild(roomDiv);
+                    }
+                });
+                document.querySelectorAll('.join-room-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const rid = btn.getAttribute('data-id');
+                        const roomRef = db.ref(`rooms/${rid}/info`);
+                        roomRef.get().then(snap => {
+                            if(snap.exists()) joinRoom(rid, snap.val().mode);
+                        });
+                    });
+                });
+            });
+        }
+        loadRooms();
+    </script>
+</body>
+</html>

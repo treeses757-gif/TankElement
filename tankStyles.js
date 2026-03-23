@@ -1,0 +1,22 @@
+const tankStyles = [
+  { id: 1, name: "Скоростной", colorHull: "#FFD966", colorTurret: "#B8860B", shape: "round", icon: "⚡", abilityName: "Скорость +50%", abilityDesc: "Пассивно: +50% к максимальной скорости." },
+  { id: 2, name: "Тяжелый", colorHull: "#8B4513", colorTurret: "#5D3A1A", shape: "square", icon: "💥", abilityName: "Урон +50%", abilityDesc: "Пассивно: +50% к урону снарядов." },
+  { id: 3, name: "Стрелок", colorHull: "#2E8B57", colorTurret: "#228B22", shape: "round", icon: "🎯", abilityName: "Перезарядка -40%", abilityDesc: "Пассивно: -40% времени перезарядки." },
+  { id: 4, name: "Лекарь", colorHull: "#FFB6C1", colorTurret: "#DB7093", shape: "round", icon: "💚", abilityName: "Регенерация", abilityDesc: "Пассивно: 5 HP/сек регенерации." },
+  { id: 5, name: "Защитник", colorHull: "#4682B4", colorTurret: "#1E90FF", shape: "square", icon: "🛡️", abilityName: "Энергощит", abilityDesc: "Активно: щит на 5 сек, поглощает 100% урона. КД 15 сек." },
+  { id: 6, name: "Тормоз", colorHull: "#708090", colorTurret: "#2F4F4F", shape: "round", icon: "🐢", abilityName: "Замедление", abilityDesc: "Активно: замедляет ближайшего врага на 50% на 3 сек. КД 12 сек." },
+  { id: 7, name: "Близнец", colorHull: "#CD853F", colorTurret: "#8B4513", shape: "square", icon: "🔫🔫", abilityName: "Двойной выстрел", abilityDesc: "Активно: следующий выстрел выпускает 2 снаряда. КД 8 сек." },
+  { id: 8, name: "Охотник", colorHull: "#556B2F", colorTurret: "#6B8E23", shape: "round", icon: "🎯", abilityName: "Самонаведение", abilityDesc: "Пассивно: снаряды слегка наводятся на врага." },
+  { id: 9, name: "Дрифтер", colorHull: "#B0C4DE", colorTurret: "#778899", shape: "round", icon: "🌀", abilityName: "Поворот +30%", abilityDesc: "Пассивно: +30% к скорости поворота корпуса." },
+  { id: 10, name: "Танк", colorHull: "#A9A9A9", colorTurret: "#696969", shape: "square", icon: "🛡️", abilityName: "Броня", abilityDesc: "Пассивно: -25% получаемого урона." },
+  { id: 11, name: "Тень", colorHull: "#2F4F4F", colorTurret: "#000000", shape: "round", icon: "👻", abilityName: "Стелс", abilityDesc: "Активно: невидимость на 3 сек. КД 10 сек." },
+  { id: 12, name: "Доктор", colorHull: "#F0E68C", colorTurret: "#DAA520", shape: "round", icon: "💊", abilityName: "Лечение", abilityDesc: "Активно: восстанавливает 50 HP. КД 15 сек." },
+  { id: 13, name: "Подрывник", colorHull: "#DC143C", colorTurret: "#B22222", shape: "square", icon: "💣", abilityName: "Взрыв", abilityDesc: "Пассивно: снаряды взрываются в радиусе 50px, нанося 25% урона соседям." },
+  { id: 14, name: "Снайпер", colorHull: "#228B22", colorTurret: "#006400", shape: "round", icon: "🔭", abilityName: "Дальность +30%", abilityDesc: "Пассивно: дальность полета снарядов увеличена на 30%." },
+  { id: 15, name: "Спринтер", colorHull: "#FFA07A", colorTurret: "#CD5C5C", shape: "round", icon: "🏃", abilityName: "Спринт", abilityDesc: "При спавне: +50% скорости на 5 сек." },
+  { id: 16, name: "Рикошетчик", colorHull: "#7B68EE", colorTurret: "#6A5ACD", shape: "square", icon: "🔄", abilityName: "Рикошет", abilityDesc: "Каждый 3-й выстрел рикошетит от стен." },
+  { id: 17, name: "Броненосец", colorHull: "#BC8F8F", colorTurret: "#8B4513", shape: "square", icon: "🛡️", abilityName: "Здоровье +50", abilityDesc: "Пассивно: +50 к максимальному здоровью." },
+  { id: 18, name: "Вампир", colorHull: "#8B0000", colorTurret: "#4B0082", shape: "round", icon: "🩸", abilityName: "Вампиризм", abilityDesc: "При попадании во врага восстанавливает 10 HP." },
+  { id: 19, name: "Глушитель", colorHull: "#483D8B", colorTurret: "#191970", shape: "round", icon: "🔇", abilityName: "ЭМ-импульс", abilityDesc: "Активно: отключает способности врагов в радиусе 300px на 4 сек. КД 20 сек." },
+  { id: 20, name: "Маг", colorHull: "#9370DB", colorTurret: "#8A2BE2", shape: "round", icon: "✨", abilityName: "Телепортация", abilityDesc: "Активно: телепорт в случайную точку в 500px. КД 18 сек." }
+];
