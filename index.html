@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tanks Duel - Многопользовательская игра</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+    <!-- Firebase SDK (compat version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -54,10 +54,6 @@
     <script>
         // Главная логика index.html
         let selectedCharacterId = 1;
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Инициализация Firebase уже в firebase-config.js
-        window.db = firebaseDatabase;
         
         // Загружаем персонажей
         function renderCharacters() {
@@ -86,7 +82,7 @@
         document.getElementById('randomCharBtn').addEventListener('click', () => {
             const randomId = Math.floor(Math.random() * tankStyles.length) + 1;
             selectedCharacterId = randomId;
-            renderCharacters(); // перерисовка с выделением
+            renderCharacters();
             localStorage.setItem('selectedTank', randomId);
         });
         
@@ -100,7 +96,7 @@
             const mode = document.getElementById('createMode').value;
             const maxPlayers = mode === 'duel' ? 2 : 10;
             const roomId = Math.floor(1000 + Math.random() * 9000).toString();
-            const roomRef = db.ref(`rooms/${roomId}`);
+            const roomRef = window.db.ref(`rooms/${roomId}`);
             await roomRef.set({
                 info: {
                     mode: mode,
@@ -112,7 +108,6 @@
             });
             document.getElementById('roomCodeValue').innerText = roomId;
             document.getElementById('roomCodeDisplay').style.display = 'flex';
-            // Автоматически присоединяемся
             joinRoom(roomId, mode);
         });
         
@@ -126,7 +121,7 @@
         document.getElementById('joinRoomBtn').addEventListener('click', () => {
             const code = document.getElementById('joinRoomCode').value.trim();
             if (!code) return;
-            const roomRef = db.ref(`rooms/${code}/info`);
+            const roomRef = window.db.ref(`rooms/${code}/info`);
             roomRef.get().then(snapshot => {
                 if (snapshot.exists() && snapshot.val().status === 'waiting') {
                     joinRoom(code, snapshot.val().mode);
@@ -147,7 +142,7 @@
         
         // Отображение активных комнат
         function loadRooms() {
-            const roomsRef = db.ref('rooms');
+            const roomsRef = window.db.ref('rooms');
             roomsRef.on('value', (snapshot) => {
                 const container = document.getElementById('roomsList');
                 container.innerHTML = '';
@@ -170,7 +165,7 @@
                 document.querySelectorAll('.join-room-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const rid = btn.getAttribute('data-id');
-                        const roomRef = db.ref(`rooms/${rid}/info`);
+                        const roomRef = window.db.ref(`rooms/${rid}/info`);
                         roomRef.get().then(snap => {
                             if(snap.exists()) joinRoom(rid, snap.val().mode);
                         });
