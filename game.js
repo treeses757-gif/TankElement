@@ -37,10 +37,10 @@ const shellRadius = 5;
 const myStyle = tankStyles.find(t => t.id === tankId);
 
 // Инициализация Firebase ссылок
-const roomRef = db.ref(`rooms/${roomId}`);
-const playersRef = db.ref(`rooms/${roomId}/players`);
-const shellsRef = db.ref(`rooms/${roomId}/shells`);
-const powerupsRef = db.ref(`rooms/${roomId}/powerups`);
+const roomRef = window.db.ref(`rooms/${roomId}`);
+const playersRef = window.db.ref(`rooms/${roomId}/players`);
+const shellsRef = window.db.ref(`rooms/${roomId}/shells`);
+const powerupsRef = window.db.ref(`rooms/${roomId}/powerups`);
 
 // --- Определение способностей (объект с методами) ---
 const abilities = {
@@ -304,14 +304,12 @@ function updateGame(delta) {
         let canUse = Date.now() > (localTank.lastAbility || 0) && (!localTank.effects.silencedUntil || Date.now() > localTank.effects.silencedUntil);
         if (canUse && abilities[tankId].onActivate(localTank, {players, shells})) {
             keys.ePressed = false;
-            // Обновить кулдаун в Firebase для отображения
             playersRef.child(myPlayerId).update({ lastAbility: localTank.lastAbility });
         }
     }
     
     // Пассивное обновление
     if (localTank.passiveUpdate) localTank.passiveUpdate(localTank, dt);
-    // Регенерация для лекаря уже есть в пассивном апдейте
     if (abilities[tankId] && abilities[tankId].onUpdate && !localTank.passiveUpdate) abilities[tankId].onUpdate(localTank, dt);
     
     // Отправить позицию в Firebase с throttle
@@ -333,7 +331,6 @@ playersRef.on('value', (snapshot) => {
         if (id === myPlayerId) continue;
         players[id] = data[id];
     }
-    // Удалить умерших или вышедших
     for (let id in players) if (!data[id]) delete players[id];
 });
 
@@ -360,7 +357,6 @@ function updateLeaderboard() {
 // Отрисовка
 function render() {
     if (!localTank) return;
-    // Камера
     camera.x = localTank.x - canvas.width/2;
     camera.y = localTank.y - canvas.height/2;
     camera.x = Math.min(mapWidth - canvas.width, Math.max(0, camera.x));
@@ -377,7 +373,7 @@ function render() {
     // Усиления
     for (let id in powerups) {
         let p = powerups[id];
-        ctx.fillStyle = powerupTypes[p.type]?.color || "gold";
+        ctx.fillStyle = window.powerupTypes?.[p.type]?.color || "gold";
         ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI*2); ctx.fill();
     }
     // Танки других игроков
@@ -389,11 +385,9 @@ function render() {
         ctx.beginPath(); ctx.rect(p.x-20, p.y-20, 40, 40); ctx.fill();
         ctx.fillStyle = style.colorTurret;
         ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2); ctx.fill();
-        // башня
         let turretEndX = p.x + Math.cos(p.turretAngle * Math.PI/180) * 25;
         let turretEndY = p.y + Math.sin(p.turretAngle * Math.PI/180) * 25;
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(turretEndX, turretEndY); ctx.lineWidth = 8; ctx.stroke();
-        // полоска здоровья
         ctx.fillStyle = "red";
         ctx.fillRect(p.x-25, p.y-35, 50, 8);
         ctx.fillStyle = "lime";
@@ -421,7 +415,6 @@ function render() {
         ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
-    // UI
     document.getElementById('healthFill').style.width = `${(localTank.health/localTank.maxHealth)*100}%`;
     let cdLeft = Math.max(0, (localTank.lastAbility || 0) - Date.now());
     let cdPercent = (cdLeft / (abilities[tankId]?.cooldown || 1)) * 100;
@@ -454,7 +447,6 @@ function gameLoop(now) {
     lastTimestamp = now;
     if (gameActive && localTank && localTank.health > 0) {
         updateGame(delta);
-        // Снаряды (движение и коллизии) - упрощенно: перемещаем снаряды и проверяем попадания
         for (let id in shells) {
             let s = shells[id];
             s.x += s.vx * delta;
@@ -463,7 +455,6 @@ function gameLoop(now) {
                 shellsRef.child(id).remove();
                 continue;
             }
-            // Проверка попадания в игроков
             let hit = false;
             for (let pid in players) {
                 let p = players[pid];
@@ -474,10 +465,9 @@ function gameLoop(now) {
                     let newHealth = Math.max(0, p.health - damage);
                     playersRef.child(pid).update({ health: newHealth });
                     if (newHealth <= 0) {
-                        // Увеличить убийства владельцу
                         if (s.owner === myPlayerId) localTank.kills++;
                         else if (players[s.owner]) players[s.owner].kills = (players[s.owner].kills || 0) + 1;
-                        playersRef.child(pid).remove(); // удалить мертвого
+                        playersRef.child(pid).remove();
                     }
                     shellsRef.child(id).remove();
                     hit = true;
@@ -493,20 +483,18 @@ function gameLoop(now) {
                 if (localTank.health <= 0) gameActive = false;
             }
         }
-        // Усиления
         for (let id in powerups) {
             let p = powerups[id];
             if (Math.hypot(p.x - localTank.x, p.y - localTank.y) < tankRadius + 12) {
-                applyPowerup(localTank, p.type);
+                if (window.applyPowerup) window.applyPowerup(localTank, p.type);
                 powerupsRef.child(id).remove();
             }
         }
-        // Спавн усилений в battle
         if (gameMode === 'battle' && Math.random() < 0.02) {
             let randX = Math.random() * (mapWidth - 100) + 50;
             let randY = Math.random() * (mapHeight - 100) + 50;
-            let type = Object.keys(powerupTypes)[Math.floor(Math.random() * 3)];
-            createPowerup(roomId, randX, randY, type);
+            let type = Object.keys(window.powerupTypes || {})[Math.floor(Math.random() * 3)] || "HEALTH";
+            if (window.createPowerup) window.createPowerup(roomId, randX, randY, type);
         }
         checkGameEnd();
     }
@@ -514,7 +502,6 @@ function gameLoop(now) {
     animationId = requestAnimationFrame(gameLoop);
 }
 
-// Настройка canvas и запуск
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -522,10 +509,9 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 initLocalTank();
-// Обновление комнаты: счетчик игроков
 roomRef.child('info').update({ currentPlayers: (Object.keys(players).length + 1) });
 gameLoop(0);
-// Выход
+
 document.getElementById('exitGameBtn').addEventListener('click', () => {
     playersRef.child(myPlayerId).remove();
     roomRef.child('info').once('value', (snap) => {
